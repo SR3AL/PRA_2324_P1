@@ -36,7 +36,7 @@ class ListArray : public List<T>{
 		}
 		T operator[](int pos){
 			if(pos < 0 || pos >= size()){
-				throw std::out_of_range("Error, fuera de rango(insert()).");
+				throw std::out_of_range("Error, fuera de rango(operador()).");
 			}
 			return this->arr[pos];
 		}
