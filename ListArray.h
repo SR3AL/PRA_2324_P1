@@ -26,10 +26,26 @@ class ListArray : public List<T>{
 			max = new_size;
 		}
 	public:
-		ListArray();
-		~ListArray();
-		T operator[](int pos);
-		friend std::ostream& operator << (std::ostream &out, const ListArray<T> & list);
+		ListArray(){
+			T* arr = new T[this->MINSIZE];
+		}
+		~ListArray(){
+			delete[] this->arr;
+		}
+		T operator[](int pos){
+			if(pos < 0 || pos >= size()){
+				throw std::out_of_range("Error, fuera de rango(insert()).");
+			}
+			return this->arr[pos];
+		}
+		friend std::ostream& operator << (std::ostream &out, const ListArray<T> & list){
+			out << "Lista -> [";
+			for(int i = 0; i < list.n; i++){
+				out << list.arr[i];
+			}
+			out << "]";
+			return out;
+		}
 		
 		// Insertamos "e" en la posicion "pos" del vector
 		void insert(int pos, T e) override{
@@ -113,7 +129,7 @@ class ListArray : public List<T>{
 				return false; // Lista no vacia
 			}
 		}
-		
+
 		// Devuelve el nº elementos de la lista
 		int size() override{
 			return n;
