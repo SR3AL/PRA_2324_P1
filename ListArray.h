@@ -27,7 +27,9 @@ class ListArray : public List<T>{
 		}
 	public:
 		ListArray(){
-			T* arr = new T[this->MINSIZE];
+			this->n = 0;
+			this->max = MINSIZE;
+			this->arr = new T[this->max];
 		}
 		~ListArray(){
 			delete[] this->arr;
@@ -39,9 +41,9 @@ class ListArray : public List<T>{
 			return this->arr[pos];
 		}
 		friend std::ostream& operator << (std::ostream &out, const ListArray<T> & list){
-			out << "Lista -> [";
+			out << "Lista -> [\n";
 			for(int i = 0; i < list.n; i++){
-				out << list.arr[i];
+				out << list.arr[i] << "\n";
 			}
 			out << "]";
 			return out;
