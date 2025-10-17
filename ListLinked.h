@@ -6,28 +6,8 @@ template <typename T>
 class ListLinked : public List<T> {
 
     private:
-    	T* arr;
-		int max;
         Node<T>* first;
         int n;
-        static const int MINSIZE = 2;
-		void resize(int new_size){
-			//Creamos el nuevo array
-			T* new_arr = new T[new_size];
-
-			//Copio el contenido en el nuevo array
-			for(int i = 0; i < n; i++){
-				new_arr[i] = this->arr[i];
-			}
-			// Liberamos los recursos de memoria de arr
-			delete[] this->arr;
-
-			//Actualizo arr
-			this->arr = new_arr;
-
-			// Actualizo max
-			max = new_size;
-		}
     public:
         ListLinked(){
             this->first = nullptr;
@@ -40,50 +20,75 @@ class ListLinked : public List<T> {
                 delete aux;
             }
         }
+		// Devolvemos el elemento de la posición "pos"
 		T operator[](int pos){
 			if(pos < 0 || pos >= size()){
 				throw std::out_of_range("Error, fuera de rango(operador()).");
 			}
-			return this->arr[pos];
+			Node<T>* c = first;
+			for(int i = 0; i < pos; i++){ // Avanzamos hasta "pos"
+				c = c->next;
+			}
+			return c->data;
 		}
-
+        friend std::ostream& operator<<(std::ostream &out, const ListLinked<T> &list){
+            out << "Lista -> [\n";
+			Node<T>* c = list.first;
+			while(c != nullptr){
+				out << c->data << "\n";
+				c = c->next;
+			}
+			out << "]";
+			return out;
+        }
 
         // Insertamos "e" en la posicion "pos" del vector
 		void insert(int pos, T e) override{
+			Node<T>* c = new Node<T>(e);
 			if(pos < 0 || pos > size()){
 				throw std::out_of_range("Error, fuera de rango(insert()).");
 			}
-			//Redimensionamiento
-			if(n == max){
-				resize(max*2);
+			if(pos == 0){
+				c ->next = first;
+				first = c;
+			}else{
+				Node<T>* anterior = first;
+				for(int i = 0; i < pos-1; i++){
+					anterior = anterior->next; // Avanza hasta encontrar pos-1
+				}
+				c->next = anterior->next;
+				anterior->next = c;
 			}
-			// Movemos a la derecha para abrir espacio para "pos"
-			for(int i = n; i > pos; i--){
-				this->arr[i] = this->arr[i-1];
-			}
-			this->arr[pos] = e; // Insertamos el elemento en la pos
 			this->n++; // Actualizamos el nº de elementos
 		}
         // Insertamos "e" al final del vector 
 		void append(T e) override{
-			if(n == max){
-				resize(max*2); // Si esta lleno el array, lo amplio
+			Node<T>* c = new Node<T>(e);
+			if(first == nullptr){ // No hay ningun elemento y lo inserta el primero.
+				first = c;
+				c->next = nullptr;
+			}else{
+				Node<T>* aux = first;
+				while (aux->next != nullptr) { // Avanza hasta el ultimo nodo
+					aux = aux->next;
+				}
+				aux->next = c;
+				c->next = nullptr;
 			}
-			this->arr[n] = e; // Coloco e en la ultima posicion
-			n++; // Aumento n
+			this->n++; // Aumentamos n
 		}
 
 		//Insertamos "e" al principio del vector
 		void prepend(T e) override{
-			if(n == max){
-				resize(max*2); // Si el array esta lleno, lo amplio
+			Node<T>* c = new Node<T>(e);
+			if(first == nullptr){ // No hay ningun elemento y lo inserta el primero.
+				first = c;
+				c->next = nullptr;
+			}else{ // Hay elementos y se inserta en primera posicion
+				c->next = first;
+				first = c;
 			}
-			//Desplazamos todo una posicion a la derecha
-			for(int i = n; i > 0; i--){
-				this->arr[i] = this->arr[i-1];
-			}
-			this->arr[0] = e; // Coloco e al principio
-			n++; // Aumento n
+			this->n++; // Aumentamos n
 		}
 
 		// Elimina el elemento de la posicion "pos"
@@ -91,15 +96,24 @@ class ListLinked : public List<T> {
 			if(pos < 0 || pos > size()-1){
 				throw std::out_of_range("Error, fuera de rango(remove()).");
 			}
-			T removed_el = this->arr[pos];
-			for(int i = pos; i < n-1; i++){
-				this->arr[i] = this->arr[i+1];
-			} n--; // Decrementamos
-			// Si n es 1/4 o menos de la capacidad max, reducimos a la mitad el tamaño
-			if (n <= max / 4 && max / 2 >= MINSIZE) {
-        		resize(this->max / 2);
-    		}
-			return removed_el;
+			Node<T>* eliminarNodo = first;
+			T valor;
+			if(pos == 0){
+				eliminarNodo = first;
+				valor = eliminarNodo->data;
+				first = first->next;
+			}else{
+				Node<T>* anterior = first;
+				for(int i = 0; i < pos-1; i++){
+					anterior = anterior->next;
+				}
+				eliminarNodo = anterior->next;
+				valor = eliminarNodo->data;
+				anterior->next = eliminarNodo->next;
+			}
+			delete eliminarNodo;
+			n--;
+			return valor;
 		}
 
 		// Devuelve el elemento de la posicion "pos"
@@ -107,18 +121,30 @@ class ListLinked : public List<T> {
 			if(pos < 0 || pos > size()-1){
 				throw std::out_of_range("Error, fuera de rango(get()).");
 			}else{
-				return this->arr[pos]; // Devolvemos el elemento de this->arr[pos]
+				if(pos == 0){
+					return first->data;
+				}else{
+					Node<T>* aux = first;
+					for(int i = 0; i < pos; i++){
+						aux = aux->next;
+					}
+					return aux->data;
+				}
 			}
 		}
 
 		// Devuelve la posicion en la que se encuentra primer elemento "e"
 		int search(T e) override{
-			// Recorro todo el array en busca de "e"
-			for(int i = 0; i < n; i++){
-				if(this->arr[i] == e){
-					return i;
+			Node<T>* aux = first;
+			int pos = 0;
+			while(aux != nullptr){
+				if(aux->data == e){
+					return pos;
+				}else{
+					pos++;
+					aux = aux->next;
 				}
-			}return -1; // No se ha encontrado el e
+			}return -1; // No se ha encontrado e
 		}
 
 		// Devuelve "true" si está vacía y "false" si no está vacía
